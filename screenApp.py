@@ -25,8 +25,9 @@ from kivy.properties import StringProperty
 from kivy.properties import NumericProperty
 from kivy.properties import BooleanProperty
 from kivy.uix.image import AsyncImage
-
 from kivy.uix.screenmanager import ScreenManager, Screen
+
+import logging
 
 #from kivy.uix.label import Label
 from kivy.uix.floatlayout import FloatLayout
@@ -390,4 +391,3 @@ def main():
     
 if __name__ == '__main__':
     main()
-    
