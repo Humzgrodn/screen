@@ -1,0 +1,29 @@
+Prioriteit
+- Werkend krijgen van de wisselende schermen op de juiste volgorde
+- Een status object toevoegen om geen/ minder globals te gebruiken
+- Zomer/ wintertijd
+- Code beter geordend maken
+	- setEventLabelHeight???
+	- Global scrollamount?
+	- initStartScreen functie maken twee regels uit build(self)
+	- CurrentScreen = sm.current in screen(app)????
+	- GetEventList/ GetBirthdayList
+- Het foto url bestand ophalen van het internet ipv lokaal, vgm staat de code hiervan in test.py
+- Alles configureerbaar maken met 1 overzichtelijk bestand
+	- Kleuren
+- Documentatie schrijven
+- Klok text outline bij fotos
+- Overzetten naar de PI
+	- Kivy op PI
+	- Google api op PI?
+- Vastzetten op 3
+- Log maken
+- Lengte scroll window???
+
+Extra features:
+- Filmpjes
+- Alleen slideshow
+- Thema's
+- Scrollen pauzeert aan einde
+- Calendar ID automatisch via summary
+- Extra ruimte bij verjaardagen

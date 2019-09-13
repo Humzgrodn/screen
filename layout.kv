@@ -1,0 +1,166 @@
+#Written by Paul Bokslag, 2019 for USSProton
+#The file is written in the kivy language, hence the kv file extension
+
+#:import * kivy.graphics 
+#:import hex kivy.utils.get_color_from_hex   
+
+<PosterScreen>:
+    #the background image
+    AsyncImage:
+        index: 0
+        source: root.posterBackgroundUrl
+        allow_stretch: True
+    #the poster image
+    AsyncImage:
+        index: 1
+        source: root.posterUrl
+        allow_stretch: True
+        
+<PhotoScreenManger>:
+
+<PhotoScreen>:
+    RelativeLayout:
+        index: 0
+        size_hint: None, None
+        size: 560, 360
+        pos: 30, 30
+        
+        #label for the date
+        Label:
+            id: date_label
+            markup: True
+            halign: 'center'
+            valign: 'center'
+            text: root.dateText
+            size_hint: None, None
+            size: self.parent.size
+            pos: 0, -35
+            
+        #label for the time
+        Label:
+            id: time_label
+            markup: True
+            halign: 'center'
+            valign: 'center'
+            text: root.timeText
+            size_hint: None, None
+            size: self.parent.size
+            pos: 0, 35
+
+
+<StartScreen>:
+    #the background image
+    AsyncImage:
+        source: root.backgroundUrl
+        allow_stretch: True
+
+    #Main container 
+    RelativeLayout:
+        size_hint: None, None
+        size: root.width - 100, 800
+        pos: 50, 50
+        
+        #Container for the scrolling text
+        RelativeLayout:
+            size_hint: None, None
+            size: 1200, 800
+            pos: 0, 0
+
+            canvas:
+                Color:
+                    rgba: hex(root.eventBackgroundColor)
+                Rectangle:
+                    size: self.size
+                    pos: 0, 0
+                    
+            RelativeLayout:
+                size_hint: None, None
+                size: 1140, 740
+                pos: 30, 30
+                
+                ScrollView:
+                    do_scroll_x: False
+                    scroll_y: root.scroll
+                    size: self.size
+                    #opacity 0 hides the bar
+                    bar_color: 0, 0, 0, 0
+                    bar_inactive_color: 0, 0, 0, 0
+                    
+                    #label that shows the text
+                    Label:
+                        id: event_label
+                        markup: True
+                        halign: 'left'
+                        valign: 'top'
+                        text: root.eventText
+                        on_size: root.setEventLabelHeight(self.texture_size[1])
+                        size_hint: 1, None
+                        size: self.texture_size
+                        text_size: 1140, None
+                        pos: 0, 0
+                        
+        
+        #Container for birthdays, time and date
+        RelativeLayout:
+            size_hint: None, None
+            #x = 1920 - 50*2 - 1200
+            size: 620, 800
+            pos: 1200, 0
+            
+            canvas: 
+                Color:
+                    rgba: hex(root.birthdayBackgroundColor)
+                Rectangle:
+                    size: self.size
+                    pos: 0, 0
+                    
+            #Container for the time and date
+            RelativeLayout:
+                size_hint: None, None
+                size: 560, 360
+                pos: 30, 30
+                
+                #label for the date
+                Label:
+                    id: date_label
+                    markup: True
+                    halign: 'center'
+                    valign: 'center'
+                    text: root.dateText
+                    size_hint: None, None
+                    size: self.parent.size
+                    pos: 0, -35
+                    
+                #label for the time
+                Label:
+                    id: time_label
+                    markup: True
+                    halign: 'center'
+                    valign: 'center'
+                    text: root.timeText
+                    size_hint: None, None
+                    size: self.parent.width, self.parent.height
+                    pos: 0, 35
+                
+
+            #Container for birthdays
+            RelativeLayout:
+                size_hint: None, None
+                #x = 620 - 2*30 y = 350 / 1.6 (because of the picture)
+                size: 560, 350
+                pos: 30, 420
+                
+                AsyncImage:
+                    source:root.birthdayUrl
+                    allow_stretch: True
+            
+                Label:
+                    id: birthday_label
+                    halign: 'left'
+                    valign: 'top'
+                    markup: True
+                    text: root.birthdayText
+                    size_hint: None, None
+                    text_size: 280, 275
+                    size: 280, 275
+                    pos: 280, 30
