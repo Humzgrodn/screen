@@ -65,7 +65,6 @@ eventLabelHeight = 1000
 sm = ScreenManager() #used for the "main screen types (home/ slideshow/ poster)
 pm = ScreenManager() #used to scroll through the pictures for the slideshow
 
-
 #magic to determine how many photo's are in an album
 def getPhotoCount(album):
     keyList = urlList.options('photo_url')
@@ -83,16 +82,16 @@ def getPosterCount():
 
 #gets the date in isoformat
 def getDate():
-    return (datetime.datetime.utcnow() + datetime.timedelta(hours=1)).isoformat()[0:10]
+    return datetime.datetime.now().isoformat()[0:10]
     
 #gets the time in isoformat, give seconds, minutes, or millis as an argument to change the detail
 def getTime(resolution="seconds"):
     if resolution == "seconds":
-        return (datetime.datetime.utcnow() + datetime.timedelta(hours=1)).isoformat()[11:19]
+        return datetime.datetime.now().isoformat()[11:19]
     elif resolution == "minutes":
-        return (datetime.datetime.utcnow() + datetime.timedelta(hours=1)).isoformat()[11:16]
+        return datetime.datetime.now().isoformat()[11:16]
     elif resolution == "millis":
-        return (datetime.datetime.utcnow() + datetime.timedelta(hours=1)).isoformat()[11:22]
+        return datetime.datetime.now().isoformat()[11:22]
     
 #this gets the amount the window should scroll each frameupdate
 def scroll(dt):
@@ -127,8 +126,8 @@ def markup(string, labelId): #the label id should match the id in the config.ini
 def getBirthdayList():
     birthdayList = ''
     # Call the Calendar API
-    now = (datetime.datetime.utcnow() + datetime.timedelta(hours=1, days=-1)).isoformat() + 'Z' # 'Z' indicates UTC time
-    nowPlusHour = (datetime.datetime.utcnow() + datetime.timedelta(hours=1)).isoformat() + 'Z'
+    now = (datetime.datetime.now() + datetime.timedelta(days=-1)).isoformat() + 'Z' # 'Z' indicates UTC time
+    nowPlusHour = datetime.datetime.now().isoformat() + 'Z'
     #HIER WORDEN DE VERJAARDAGEN OPGEHAALD
     birthdayResults = getService().events().list(calendarId='cus9h91mlj8ck2t07n8q69hgeg@group.calendar.google.com', #'primary' is alle, hier moet de verjaardagscalender id staan.
                                         timeMin=now,
@@ -151,8 +150,8 @@ def getEventList():
     eventList = eventSeparator
     
     # Call the Calendar API
-    now = datetime.datetime.utcnow().isoformat() + 'Z' # 'Z' indicates UTC time
-    maxInterval = (datetime.datetime.utcnow() + datetime.timedelta(weeks=int(config['start_screen']['maximum_time']))).isoformat() + 'Z'
+    now = datetime.datetime.now().isoformat() + 'Z' # 'Z' indicates UTC time
+    maxInterval = (datetime.datetime.now() + datetime.timedelta(weeks=int(config['start_screen']['maximum_time']))).isoformat() + 'Z'
     
     #HIER WORDEN DE EVENEMENTEN OPGEHAALD
     eventResults = getService().events().list(calendarId='bestuurproton@gmail.com', #hetzelfde als verjaardag maar dan met evenementen
