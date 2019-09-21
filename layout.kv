@@ -23,7 +23,7 @@
         index: 0
         size_hint: None, None
         size: 560, 360
-        pos: 30, 30
+        pos: 1330, 0
         
         #label for the date
         Label:
@@ -53,6 +53,15 @@
     AsyncImage:
         source: root.backgroundUrl
         allow_stretch: True
+
+    Label:
+        id: header
+        markup: True
+        text: root.header
+        pos: 460, 850
+        valign: 'middle'
+        size_hint: None, None
+        size: 1000, 180
 
     #Main container 
     RelativeLayout:

@@ -11,6 +11,7 @@ import io
 import time
 import math
 import urllib.request
+import logging
 
 from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
@@ -25,9 +26,10 @@ from kivy.properties import StringProperty
 from kivy.properties import NumericProperty
 from kivy.properties import BooleanProperty
 from kivy.uix.image import AsyncImage
-from kivy.uix.screenmanager import ScreenManager, Screen
 
-import logging
+
+
+from kivy.uix.screenmanager import ScreenManager, Screen
 
 #from kivy.uix.label import Label
 from kivy.uix.floatlayout import FloatLayout
@@ -64,6 +66,27 @@ eventLabelHeight = 1000
 #set the screen managers
 sm = ScreenManager() #used for the "main screen types (home/ slideshow/ poster)
 pm = ScreenManager() #used to scroll through the pictures for the slideshow
+
+class Current():
+    scrollAmountVar = 1.0
+    screenTimeVar = 0.0
+    photoTimeVar = 0.0
+    currentAlbumVar = 0
+    albumCountVar = 3
+    currentPosterVar = 1
+    eventLabelHeightVar = 1000
+
+
+    def scrollAmount(self):
+        return scrollAmountVar
+        
+    def screenTime(self):
+        return screenTimeVar
+        
+    def photoTime(self):
+        return photoTimeVar
+
+
 
 #magic to determine how many photo's are in an album
 def getPhotoCount(album):
@@ -126,8 +149,8 @@ def markup(string, labelId): #the label id should match the id in the config.ini
 def getBirthdayList():
     birthdayList = ''
     # Call the Calendar API
-    now = (datetime.datetime.now() + datetime.timedelta(days=-1)).isoformat() + 'Z' # 'Z' indicates UTC time
-    nowPlusHour = datetime.datetime.now().isoformat() + 'Z'
+    now = (datetime.datetime.now() + datetime.timedelta(days=-1)).isoformat() + 'Z' # 'Z' indicates UTC time why the -1
+    nowPlusHour = (datetime.datetime.now() + datetime.timedelta(hours=1)).isoformat() + 'Z'
     #HIER WORDEN DE VERJAARDAGEN OPGEHAALD
     birthdayResults = getService().events().list(calendarId='cus9h91mlj8ck2t07n8q69hgeg@group.calendar.google.com', #'primary' is alle, hier moet de verjaardagscalender id staan.
                                         timeMin=now,
@@ -227,6 +250,8 @@ class StartScreen(Screen):
     eventBackgroundColor = StringProperty()
     backgroundUrl = StringProperty()
     birthdayUrl = StringProperty()
+    header = StringProperty()
+    
 
     dateText = StringProperty()
     timeText = StringProperty()
@@ -235,6 +260,7 @@ class StartScreen(Screen):
     contentLabelHeight = NumericProperty()
     #printCalendarId()
     
+    header = markup(config['header']['text'], 'header')
     backgroundUrl = config['url_files']['start_background']
     birthdayUrl = config['url_files']['birthday_background']
     birthdayBackgroundColor = '#' + config['background_color']['birthday_color']
@@ -390,3 +416,4 @@ def main():
     
 if __name__ == '__main__':
     main()
+    
