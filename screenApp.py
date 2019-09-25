@@ -62,6 +62,8 @@ currentAlbum = 0
 albumCount = 3
 currentPoster = 1
 eventLabelHeight = 1000
+prepareTime = 1 # the time in seconds (i  think)
+prepared = False
 
 #set the screen managers
 sm = ScreenManager() #used for the "main screen types (home/ slideshow/ poster)
@@ -234,13 +236,37 @@ def getService():
 
 #sets the next screen
 def nextScreen():
-    global screenTime
+    global screenTime, prepared
+    prepared = False
     screenTime = 0
-    log("Changing to the " + sm.next())
+    logging.info("Changing to the " + sm.next())
     sm.current = sm.next()
-    
-def log(string, type="notification"):
-    print("[" + getDate() + " " + getTime("millis") + "] " + str(string))
+
+def prepareScreen():
+    nextScreenName = sm.next()
+    logging.info("now preparing: " + str(nextScreenName))
+    global prepared
+    if nextScreenName == 'start_screen':
+        logging.debug("hello world")
+        sm.get_screen('start_screen').birthdayUpdate()
+        sm.get_screen('start_screen').eventUpdate()
+
+    if nextScreenName == 'poster_screen':
+        global currentPoster
+        currentPoster += 1
+        if currentPoster > getPosterCount():
+            currentPoster = 1
+        logging.info("Loading poster " + str(currentPoster))
+        posterUrl = urlList['poster_url'][str(currentPoster)][1:-1].replace(' ', '%20')
+        print(posterUrl)
+
+    if nextScreenName  == 'photo_screen':
+        global photoTime
+        photoTime = 0
+        nextAlbum()
+        print("next album loaded")
+
+    prepared = True
 
 #The screen used to display the events and birthdays etc.
 class StartScreen(Screen):
@@ -273,8 +299,12 @@ class StartScreen(Screen):
         
     #updates every frame
     def frameUpdate(self, dt):
+        global prepared
 
         #when it's time, change to the next screen
+        if float(config['start_screen']['time_spend']) < (screenTime + prepareTime) and not prepared:
+            prepareScreen()
+            print("prepare for photo's")
         if float(config['start_screen']['time_spend']) < screenTime:
             nextScreen()
             return
@@ -284,11 +314,11 @@ class StartScreen(Screen):
         self.timeText = markup(getTime(), 'start_time_label')
         
     def eventUpdate(self):
-        log("Updating events")
+        logging.info("Updating events")
         self.eventText = getEventList()
         
     def birthdayUpdate(self):
-        log("Updating birthdays")
+        logging.info("Updating birthdays")
         self.birthdayText = markup(getBirthdayList(), 'birthday_label')
 
 #this empty class is needed because a screenmanager cannot be added to a screenmanager but only to a screen.
@@ -304,13 +334,13 @@ def nextAlbum():
     if currentAlbum > 3: #maak een albumcount functie
         currentAlbum = 1
     
-    log("Loading photo album " + str(currentAlbum))
+    logging.info("Loading photo album " + str(currentAlbum))
     #remove all screens/ photos from the manager, ugly but works
     #print("Pre removal: " + str(pm.screen_names))
     for removedScreen in pm.screen_names:
-        #print("Screen to be removed: " + str(removedScreen))
+        print("Screen to be removed: " + str(removedScreen))
         pm.remove_widget(pm.get_screen(removedScreen))
-        #print("After removal: " + str(pm.screen_names))
+        print("After removal: " + str(pm.screen_names))
 
     
     #makes a new screen for each photo in the current photo album and adds this photo to the screen
@@ -320,30 +350,29 @@ def nextAlbum():
         #add the photo to the screen
         photoScreen.add_widget(AsyncImage(source=urlList['photo_url'][str(currentAlbum) + '-' + str(i + 1)][1:-1].replace(' ', '%20'), allow_stretch=True))
         #add the screen to the screenmanager
-        pm.add_widget(photoScreen)    
-    
+        pm.add_widget(photoScreen)
 
 #this is the code for changing photos in albums, I think something's wrong here and the code is still wip
 class PhotoScreen(Screen):
     global currentAlbum
     
-    nextAlbum()
-    
     dateText = markup(getDate(), 'photo_date_label')
     timeText = markup(getTime(), 'photo_time_label')
 
     def frameUpdate(self, dt):
-        global photoTime
+        global photoTime, prepared
         global currentAlbum
         #print("Now displaying: " + str(currentAlbum) + ", " + str(pm.current))
         photoTime += dt
         #loading a new photo
+        if pm.current == 'photo_' + str(getPhotoCount(currentAlbum)) and not prepared:
+            prepareScreen()
+
         if int(config['photo_screen']['time_spend']) < photoTime:
             
             #going to the poster screen and setting the new album
             if pm.current == 'photo_' + str(getPhotoCount(currentAlbum)): #heeeeel inefficient
-                photoTime = 0
-                nextAlbum()
+
                 nextScreen()
                 return
             photoTime = 0
@@ -359,25 +388,15 @@ class PosterScreen(Screen):
     global currentPoster
     posterBackgroundUrl = StringProperty()
     posterBackgroundUrl = config['url_files']['poster_background'].replace(' ', '%20')
-    
     posterUrl = StringProperty()
     posterUrl = urlList['poster_url'][str(currentPoster)][1:-1].replace(' ', '%20')
     
     def frameUpdate(self, dt):
-        global screenTime, currentPoster
+        global screenTime, currentPoster, prepared
         screenTime += dt
+        if int(config['poster_screen']['time_spend']) < screenTime + prepareTime and not prepared:
+            prepareScreen()
         if int(config['poster_screen']['time_spend']) < screenTime:
-            
-            sm.get_screen('start_screen').birthdayUpdate()
-            sm.get_screen('start_screen').eventUpdate()
-
-            currentPoster += 1
-            if currentPoster > getPosterCount():
-                currentPoster = 1
-            
-            log("Loading poster " + str(currentPoster))
-            posterUrl = urlList['poster_url'][str(currentPoster)][1:-1].replace(' ', '%20')
-            print(posterUrl)
             nextScreen()
         
 #the main app
@@ -416,4 +435,3 @@ def main():
     
 if __name__ == '__main__':
     main()
-    
