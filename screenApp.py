@@ -1,5 +1,5 @@
-#Author: Paul Bokslag
-#
+#Author: Paul Bokslag, Ties Bakker
+#In name of U.S.S. Proton 2019
 
 from __future__ import print_function
 import datetime
@@ -18,6 +18,7 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 
 from kivy.core.window import Window
+from kivy.loader import Loader
 from kivy.app import App
 from kivy.lang import Builder
 from kivy.clock import Clock
@@ -26,6 +27,8 @@ from kivy.properties import StringProperty
 from kivy.properties import NumericProperty
 from kivy.properties import BooleanProperty
 from kivy.uix.image import AsyncImage
+from kivy.uix.image import Image
+
 from kivy.uix.screenmanager import ScreenManager, Screen
 
 
@@ -47,8 +50,10 @@ config.read('config.ini')
 
 urlList = configparser.ConfigParser(interpolation=None)
 
+
 urlList.read('url.ini')
 #urlList.read_string(urlListStr)
+
 
 
 #gloabals
@@ -58,7 +63,7 @@ screenTime = 0.0
 photoTime = 0.0
 currentAlbum = 0
 albumCount = 3
-currentPoster = 1
+currentPoster = 0
 eventLabelHeight = 1000
 prepareTime = 1 # the time in seconds (i  think)
 prepared = False
@@ -177,6 +182,8 @@ def getEventList():
         
         eventList = eventList + startDate + eventTitle + eventDescription+ eventSeparator
         
+    eventList = '\n\n' + eventList    
+        
     return eventList
     
 #Gets the calendar id's, can be handy for determining the id's. This is not actively used but needed to configure the screen
@@ -224,18 +231,11 @@ def prepareScreen():
     logging.info("now preparing: " + str(nextScreenName))
     global prepared
     if nextScreenName == 'start_screen':
-        logging.debug("hello world")
         sm.get_screen('start_screen').birthdayUpdate()
         sm.get_screen('start_screen').eventUpdate()
 
     if nextScreenName == 'poster_screen':
-        global currentPoster
-        currentPoster += 1
-        if currentPoster > getPosterCount():
-            currentPoster = 1
-        logging.info("Loading poster " + str(currentPoster))
-        posterUrl = urlList['poster_url'][str(currentPoster)][1:-1].replace(' ', '%20')
-        print(posterUrl)
+        sm.get_screen('poster_screen').loadNewPoster()
 
     if nextScreenName  == 'photo_screen':
         global photoTime
@@ -275,14 +275,14 @@ class StartScreen(Screen):
     #sets the total height of the label displaying the text
     def setEventLabelHeight(self, h):
         global eventLabelHeight
-        eventLabelHeight = h
+        eventLabelHeight = h + 200 #200 pixels padding to read the last event description
         
     #updates every frame
     def frameUpdate(self, dt):
         global prepared
 
         #when it's time, change to the next screen
-        if float(config['start_screen']['time_spend']) < (screenTime + prepareTime) and not prepared:
+        if float(config['start_screen']['time_spend']) < (screenTime + prepareTime + 4) and not prepared:
             prepareScreen()
             print("prepare for photo's")
         if float(config['start_screen']['time_spend']) < screenTime:
@@ -369,8 +369,18 @@ class PosterScreen(Screen):
     posterBackgroundUrl = StringProperty()
     posterBackgroundUrl = config['url_files']['poster_background'].replace(' ', '%20')
     posterUrl = StringProperty()
-    posterUrl = urlList['poster_url'][str(currentPoster)][1:-1].replace(' ', '%20')
     
+    def loadNewPoster(self):
+        global currentPoster
+        currentPoster += 1
+        
+        if currentPoster > getPosterCount():
+            currentPoster = 1
+        
+        logging.info("Loading poster " + str(currentPoster))
+        self.posterUrl = urlList['poster_url'][str(currentPoster)][1:-1].replace(' ', '%20')
+        print('new poster loaded: ' + self.posterUrl)
+        
     def frameUpdate(self, dt):
         global screenTime, currentPoster, prepared
         screenTime += dt
@@ -382,6 +392,8 @@ class PosterScreen(Screen):
 #the main app
 class MainApp(App):
     Builder.load_file('layout.kv')
+    Loader.loading_image = 'chrome_dino.jpg'
+
 
     def frameUpdate(self, dt):
         global screenTime
@@ -394,12 +406,14 @@ class MainApp(App):
         sm.add_widget(StartScreen(name='start_screen'))
         sm.add_widget(PhotoScreen(name='photo_screen'))
         sm.add_widget(PosterScreen(name='poster_screen'))
+        
 
         sm.get_screen('photo_screen').add_widget(pm, 5) #index is higher so the photos are drawn under the clock
         
         Clock.schedule_interval(self.frameUpdate, 1.0 / FPS)
         
-        #Better to move to a new function, initStartscreen
+        #Initialising the start screen
+        log("Initialising the start screen")
         sm.get_screen('start_screen').birthdayUpdate()
         sm.get_screen('start_screen').eventUpdate()
         
