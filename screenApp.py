@@ -4,14 +4,14 @@
 from __future__ import print_function
 import datetime
 import pickle
+import logging
 import os.path
-import kivy #for gui
 import configparser
 import io
 import time
 import math
 import urllib.request
-import logging
+
 
 from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
@@ -26,10 +26,8 @@ from kivy.properties import StringProperty
 from kivy.properties import NumericProperty
 from kivy.properties import BooleanProperty
 from kivy.uix.image import AsyncImage
-
-
-
 from kivy.uix.screenmanager import ScreenManager, Screen
+
 
 #from kivy.uix.label import Label
 from kivy.uix.floatlayout import FloatLayout
@@ -68,27 +66,6 @@ prepared = False
 #set the screen managers
 sm = ScreenManager() #used for the "main screen types (home/ slideshow/ poster)
 pm = ScreenManager() #used to scroll through the pictures for the slideshow
-
-class Current():
-    scrollAmountVar = 1.0
-    screenTimeVar = 0.0
-    photoTimeVar = 0.0
-    currentAlbumVar = 0
-    albumCountVar = 3
-    currentPosterVar = 1
-    eventLabelHeightVar = 1000
-
-
-    def scrollAmount(self):
-        return scrollAmountVar
-        
-    def screenTime(self):
-        return screenTimeVar
-        
-    def photoTime(self):
-        return photoTimeVar
-
-
 
 #magic to determine how many photo's are in an album
 def getPhotoCount(album):
@@ -267,6 +244,9 @@ def prepareScreen():
         print("next album loaded")
 
     prepared = True
+
+def log(string, type="notification"):
+    logging.info("[" + getDate() + " " + getTime("millis") + "] " + str(string))
 
 #The screen used to display the events and birthdays etc.
 class StartScreen(Screen):
