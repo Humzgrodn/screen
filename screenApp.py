@@ -38,27 +38,26 @@ from kivy.uix.floatlayout import FloatLayout
 # If modifying these scopes, delete the file token.pickle.
 SCOPES = ['https://www.googleapis.com/auth/calendar.readonly']
 
-# Get the config
+# Get the config    
 config = configparser.ConfigParser(interpolation=None)
 config.read('config.ini')
 
 
-#page = urllib.request.urlopen('https://ussproton.nl/files/foto/ditiseenbeetjeeenrarebestandsnaammaarzoishetlastigerteraden.php?QWACaIbr5bBnexpBa0Mj=ijheVgsq7tWhtUW0UafE&rtJMWzYjtEj0meQpXoKx=Tmml2CShQPlJGB8jcwWq')
-#urlListStr = page.read().decode('utf-8')
+page = urllib.request.urlopen('https://ussproton.nl/files/foto/ditiseenbeetjeeenrarebestandsnaammaarzoishetlastigerteraden.php?QWACaIbr5bBnexpBa0Mj=ijheVgsq7tWhtUW0UafE&rtJMWzYjtEj0meQpXoKx=Tmml2CShQPlJGB8jcwWq')
+urlListStr = page.read().decode('utf-8')
 
 #print(urlListStr)
 
 urlList = configparser.ConfigParser(interpolation=None)
 
 
-urlList.read('url.ini')
-#urlList.read_string(urlListStr)
+#urlList.read('url.ini')
+urlList.read_string(urlListStr)
 
 
 
 #gloabals
 FPS = int(config['other']['fps'])
-scrollAmount = 1.0
 screenTime = 0.0
 photoTime = 0.0
 currentAlbum = 0
@@ -101,8 +100,7 @@ def getTime(resolution="seconds"):
         return datetime.datetime.now().isoformat()[11:22]
     
 #this gets the amount the window should scroll each frameupdate
-def scroll(dt):
-    global scrollAmount
+def scroll(dt, scrollAmount):
     if scrollAmount < 0:
         scrollAmount = 1
     else:
@@ -250,6 +248,7 @@ def log(string, type="notification"):
 
 #The screen used to display the events and birthdays etc.
 class StartScreen(Screen):
+    scrollAmount = -1
     #Kivy has two ways of changing properties in the kivy file, and I think these ....Properties work the best and are clear. Maybe for some cases another way would be better (using objects maybe)
     birthdayText = StringProperty()
     birthdayBackgroundColor = StringProperty()
@@ -276,6 +275,7 @@ class StartScreen(Screen):
     def setEventLabelHeight(self, h):
         global eventLabelHeight
         eventLabelHeight = h + 200 #200 pixels padding to read the last event description
+        print(eventLabelHeight)
         
     #updates every frame
     def frameUpdate(self, dt):
@@ -289,11 +289,13 @@ class StartScreen(Screen):
             nextScreen()
             return
             
-        self.scroll = scroll(dt)
+        self.scroll = scroll(dt, self.scrollAmount)
+        self.scrollAmount = self.scroll
         self.dateText = markup(getDate(), 'start_date_label')
         self.timeText = markup(getTime(), 'start_time_label')
         
     def eventUpdate(self):
+        self.scrollAmount = 1
         logging.info("Updating events")
         self.eventText = getEventList()
         
@@ -301,10 +303,7 @@ class StartScreen(Screen):
         logging.info("Updating birthdays")
         self.birthdayText = markup(getBirthdayList(), 'birthday_label')
 
-#this empty class is needed because a screenmanager cannot be added to a screenmanager but only to a screen.
-#class PhotoScreenManager(ScreenManager):
-#    pass
-    
+
 #removes the current photos from the photoscreenmanager and adds the new ones
 def nextAlbum():
     global currentAlbum
