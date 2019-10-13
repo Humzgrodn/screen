@@ -28,7 +28,7 @@ from kivy.properties import NumericProperty
 from kivy.properties import BooleanProperty
 from kivy.uix.image import AsyncImage
 from kivy.uix.image import Image
-
+from kivy.logger import Logger
 from kivy.uix.screenmanager import ScreenManager, Screen
 
 
@@ -50,11 +50,8 @@ urlListStr = page.read().decode('utf-8')
 
 urlList = configparser.ConfigParser(interpolation=None)
 
-
 #urlList.read('url.ini')
 urlList.read_string(urlListStr)
-
-
 
 #gloabals
 FPS = int(config['other']['fps'])
@@ -70,6 +67,49 @@ prepared = False
 #set the screen managers
 sm = ScreenManager() #used for the "main screen types (home/ slideshow/ poster)
 pm = ScreenManager() #used to scroll through the pictures for the slideshow
+
+#gives a normal timestamp for logs
+def log(string):
+    time = datetime.datetime.now()
+    time = str(time.strftime("%m/%d.%H:%M:%S.%f"))[:-4]
+    Logger.info("timestamp: " + time + str(string))
+
+#timelog function: usage: if you want to start a timer, give starStop = "start", this will log the startime, to end the timelog give the argument starStop = "stop"
+# the id makes sure multiple timers can be run at the same time, and that 2 different strings can be logged for start/stop  of timer
+startStopDict = {}
+def timeLog(id, string, startStop = "start"):
+    global startStopDict
+    if startStop == "start":
+        startTime = datetime.datetime.now()
+        if id not in startStopDict:
+            print("timelog activated start")
+            startStopDict[id] = startTime
+            Logger.info("starttime: " + str(startTime.strftime("%m/%d.%H:%M:%S")) +" " str(string))
+            return
+
+        else:
+            oldStartTime = startStopDict[id]
+            startTime = datetime.datetime.now()
+            Logger.warning("starttime: id already exists ("+ str(id) +" "+ str(oldStartTime.strftime("%m/%d, %H:%M:%S"))+"), now overridden to " + str(startTime.strftime("%m/%d, %H:%M:%S")))
+            return
+
+    elif startStop == "stop":
+        print("timelog activated stop")
+        stopTime = datetime.datetime.now()
+        try:
+            startTime = startStopDict[id]
+        except:
+            Logger.info("no id: "+ str(stopTime) + str(string))
+            return
+        del startStopDict[id]
+        delta = stopTime - startTime
+        delta = str(delta)[:-4]
+        Logger.info("timedelta: " + delta +" "+ str(string))
+        return
+
+    elif startStop != "start" and startStop != "stop":
+        Logger.warning("timedelta: no start/stop" + str(string))
+
 
 #magic to determine how many photo's are in an album
 def getPhotoCount(album):
@@ -243,9 +283,6 @@ def prepareScreen():
 
     prepared = True
 
-def log(string, type="notification"):
-    logging.info("[" + getDate() + " " + getTime("millis") + "] " + str(string))
-
 #The screen used to display the events and birthdays etc.
 class StartScreen(Screen):
     scrollAmount = -1
@@ -256,8 +293,6 @@ class StartScreen(Screen):
     backgroundUrl = StringProperty()
     birthdayUrl = StringProperty()
     header = StringProperty()
-    
-
     dateText = StringProperty()
     timeText = StringProperty()
     eventText = StringProperty()
@@ -275,7 +310,7 @@ class StartScreen(Screen):
     def setEventLabelHeight(self, h):
         global eventLabelHeight
         eventLabelHeight = h + 200 #200 pixels padding to read the last event description
-        print(eventLabelHeight)
+        print("eventlabelhight", eventLabelHeight)
         
     #updates every frame
     def frameUpdate(self, dt):
@@ -412,8 +447,12 @@ class MainApp(App):
         Clock.schedule_interval(self.frameUpdate, 1.0 / FPS)
         
         #Initialising the start screen
-        log("Initialising the start screen")
+        timeLog("startscreen", "Initialising the start screen", "start")
+        print("starscreenstart")
         sm.get_screen('start_screen').birthdayUpdate()
+        timeLog("startscreen", "Initialising the start screen", "stop")
+        print("starscreenstop")
+        log("startscreenstop")
         sm.get_screen('start_screen').eventUpdate()
         
         return sm

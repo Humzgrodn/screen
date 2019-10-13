@@ -12,13 +12,12 @@ Prioriteit
 - Alles configureerbaar maken met 1 overzichtelijk bestand
 	- Kleuren
 - Documentatie schrijven
-- Klok text outline bij fotos
 - Overzetten naar de PI
-	- Kivy op PI
-	- Google api op PI?
-- Vastzetten op 3
+	- Kivy op PI (problemen met hw acceleration/drivers)
+	- Google api op PI? (werkend)
 - Log maken
 - Lengte scroll window???
+- handling of no internet connection
 
 Extra features:
 - Filmpjes
