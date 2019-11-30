@@ -32,8 +32,9 @@ from kivy.properties import NumericProperty
 from kivy.properties import BooleanProperty
 from kivy.uix.image import AsyncImage
 from kivy.uix.image import Image
-
+from kivy.logger import Logger
 from kivy.uix.screenmanager import ScreenManager, Screen
+
 
 
 #from kivy.uix.label import Label
@@ -231,7 +232,8 @@ def getEventList():
     
     #sloop alle kleur eraf
     eventList = eventList.replace("[color=#" + config['event_label_description']['color'] + "]", "").replace("[/color]", "")
-
+    eventList = eventList[:2000]
+    print("eventList Len:" + str(len(eventList)))
     eventList = "[color=#" + config['event_label_description']['color'] + "]" + eventList + "[/color]"
     return eventList
     
@@ -293,9 +295,6 @@ def prepareScreen():
         print("next album loaded")
 
     prepared = True
-
-def log(string, type="notification"):
-    logging.info("[" + getDate() + " " + getTime("millis") + "] " + str(string))
 
 #The screen used to display the events and birthdays etc.
 class StartScreen(Screen):
