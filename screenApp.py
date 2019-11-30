@@ -75,6 +75,49 @@ prepared = False
 sm = ScreenManager() #used for the "main screen types (home/ slideshow/ poster)
 pm = ScreenManager() #used to scroll through the pictures for the slideshow
 
+#gives a normal timestamp for logs
+def log(string):
+    time = datetime.datetime.now()
+    time = str(time.strftime("%m/%d.%H:%M:%S.%f"))[:-4]
+    Logger.info("timestamp: " + time + str(string))
+
+#timelog function: usage: if you want to start a timer, give starStop = "start", this will log the startime, to end the timelog give the argument starStop = "stop"
+# the id makes sure multiple timers can be run at the same time, and that 2 different strings can be logged for start/stop  of timer
+startStopDict = {}
+def timeLog(id, string, startStop = "start"):
+    global startStopDict
+    if startStop == "start":
+        startTime = datetime.datetime.now()
+        if id not in startStopDict:
+            print("timelog activated start")
+            startStopDict[id] = startTime
+            Logger.info("starttime: " + str(startTime.strftime("%m/%d.%H:%M:%S")) +" " + str(string))
+            return
+
+        else:
+            oldStartTime = startStopDict[id]
+            startTime = datetime.datetime.now()
+            Logger.warning("starttime: id already exists ("+ str(id) +" "+ str(oldStartTime.strftime("%m/%d, %H:%M:%S"))+"), now overridden to " + str(startTime.strftime("%m/%d, %H:%M:%S")))
+            return
+
+    elif startStop == "stop":
+        print("timelog activated stop")
+        stopTime = datetime.datetime.now()
+        try:
+            startTime = startStopDict[id]
+        except:
+            Logger.info("no id: "+ str(stopTime) + str(string))
+            return
+        del startStopDict[id]
+        delta = stopTime - startTime
+        delta = str(delta)[:-4]
+        Logger.info("timedelta: " + delta +" "+ str(string))
+        return
+
+    elif startStop != "start" and startStop != "stop":
+        Logger.warning("timedelta: no start/stop" + str(string))
+
+
 #magic to determine how many photo's are in an album
 def getPhotoCount(album):
     keyList = urlList.options('photo_url')
@@ -187,8 +230,9 @@ def getEventList():
     eventList = '\n\n' + eventList    
     
     #sloop alle kleur eraf
-    eventList = "[color=#" + config['event_label_description']['color'] + "]" + eventList.replace("[color=#" + config['event_label_description']['color'] + "]", "").replace("[/color]", "") + "[/color]"
-    
+    eventList = eventList.replace("[color=#" + config['event_label_description']['color'] + "]", "").replace("[/color]", "")
+
+    eventList = "[color=#" + config['event_label_description']['color'] + "]" + eventList + "[/color]"
     return eventList
     
 #Gets the calendar id's, can be handy for determining the id's. This is not actively used but needed to configure the screen
