@@ -13,6 +13,10 @@ import math
 import urllib.request
 
 
+#import os
+#os.environ['KIVY_IMAGE'] = 'sdl2'
+
+
 from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
@@ -64,7 +68,7 @@ currentAlbum = 0
 albumCount = 3
 currentPoster = 0
 eventLabelHeight = 1000
-prepareTime = 1 # the time in seconds (i  think)
+prepareTime = 1 # the time in seconds (I think)
 prepared = False
 
 #set the screen managers
@@ -121,7 +125,7 @@ def markup(string, labelId): #the label id should match the id in the config.ini
         
     if config[labelId]['strikethrough'] == 'yes':
         string = '[s]' + string + '[/s]'
-        
+    
     string = '[color=#' + config[labelId]['color'] + ']' + string + '[/color]'
     string = '[size=' + config[labelId]['size'] + ']' + string + '[/size]'
 
@@ -178,10 +182,13 @@ def getEventList():
         except KeyError:
             eventDescription = markup('Geen omschrijving', 'event_label_description') + '\n'
         
-        eventList = eventList + startDate + eventTitle + eventDescription+ eventSeparator
+        eventList = eventList + startDate + eventTitle + eventDescription + eventSeparator
         
     eventList = '\n\n' + eventList    
-        
+    
+    #sloop alle kleur eraf
+    eventList = "[color=#" + config['event_label_description']['color'] + "]" + eventList.replace("[color=#" + config['event_label_description']['color'] + "]", "").replace("[/color]", "") + "[/color]"
+    
     return eventList
     
 #Gets the calendar id's, can be handy for determining the id's. This is not actively used but needed to configure the screen
