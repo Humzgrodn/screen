@@ -51,8 +51,6 @@ config.read('config.ini')
 page = urllib.request.urlopen('https://ussproton.nl/files/foto/ditiseenbeetjeeenrarebestandsnaammaarzoishetlastigerteraden.php?QWACaIbr5bBnexpBa0Mj=ijheVgsq7tWhtUW0UafE&rtJMWzYjtEj0meQpXoKx=Tmml2CShQPlJGB8jcwWq')
 urlListStr = page.read().decode('utf-8')
 
-#print(urlListStr)
-
 urlList = configparser.ConfigParser(interpolation=None)
 
 #only choose one of these 2
@@ -71,16 +69,17 @@ currentPoster = 0
 eventLabelHeight = 1000
 prepareTime = 1 # the time in seconds (I think)
 prepared = False
-
+maxEventTextLength = int(config['start_screen']['max_scroll_text']) # fix for black scroll screen on Rpi, limits the displayed text to within the limits of Kivy.
+photoUrlList = []
 #set the screen managers
 sm = ScreenManager() #used for the "main screen types (home/ slideshow/ poster)
 pm = ScreenManager() #used to scroll through the pictures for the slideshow
 
-#gives a normal timestamp for logs
+#gives a normal timestamp for log
 def log(string):
     time = datetime.datetime.now()
     time = str(time.strftime("%m/%d.%H:%M:%S.%f"))[:-4]
-    Logger.info("timestamp: " + time + str(string))
+    Logger.info("timestamp: " + time +" "+ str(string))
 
 #timeLog function: if you want to start a timer, give starStop = "start", this will log the startime, to end the timelog give the argument starStop = "stop"
 # the id makes sure multiple timers can be run at the same time, and that 2 different strings can be logged for start/stop  of timer
@@ -116,11 +115,30 @@ def timeLog(id, string, startStop = "start"):
     elif startStop != "start" and startStop != "stop":
         Logger.warning("timedelta: no start/stop" + str(string))
 
+def updateGlobals():
+    global config
+    # Get the config
+    config = configparser.ConfigParser(interpolation=None)
+    config.read('config.ini')
+    global urlListStr
+    global urlList
+    page = urllib.request.urlopen('https://ussproton.nl/files/foto/ditiseenbeetjeeenrarebestandsnaammaarzoishetlastigerteraden.php?QWACaIbr5bBnexpBa0Mj=ijheVgsq7tWhtUW0UafE&rtJMWzYjtEj0meQpXoKx=Tmml2CShQPlJGB8jcwWq')
+    urlListStr = page.read().decode('utf-8')
+    urlList = configparser.ConfigParser(interpolation=None)
+    urlList.read_string(urlListStr) #aan voor url van internet
+    log("updated globals")
+    #global urlList
+    global prepareTime
+    prepareTime = int(config['other']['prepare_time'])
+    global maxEventTextLength
+    maxEventTextLength = int(config['start_screen']['max_scroll_text'])
+    global photoUrlList
+    photoUrlList = urlList.options('photo_url')
 
 #magic to determine how many photo's are in an album
 def getPhotoCount(album):
-    keyList = urlList.options('photo_url')
-    print("album length" + str(keyList))
+    global photoUrlList
+    keyList = photoUrlList
     try:
         currentAlbumPhotos = int(keyList[keyList.index(str(album + 1) + '-1') - 1][len(str(album) + '-'):])
     except ValueError:
@@ -198,6 +216,7 @@ def getBirthdayList():
 
 #gets the event list from the google calendar
 def getEventList():
+    global maxEventTextLength
     eventSeparator = markup(config['event_label_separation']['string'], 'event_label_separation') + '\n'
     eventList = eventSeparator
     
@@ -222,16 +241,18 @@ def getEventList():
         eventTitle = markup(event['summary'], 'event_label_title') + '\n'
         try:
             eventDescription = markup(event['description'], 'event_label_description') + '\n'
+            print(eventDescription)
+            eventDescription = eventDescription.replace("[color=#" + config['event_label_description']['color'] + "]", "").replace("[/color]", "")
+            print(eventDescription)
         except KeyError:
             eventDescription = markup('Geen omschrijving', 'event_label_description') + '\n'
         
         eventList = eventList + startDate + eventTitle + eventDescription + eventSeparator
-        
-    eventList = '\n\n' + eventList    
-    
-    #sloop alle kleur eraf en check hoe lang de string mag zijn (2100 characters + colors)
-    eventList = eventList.replace("[color=#" + config['event_label_description']['color'] + "]", "").replace("[/color]", "")
-    eventList = eventList[:2100]
+        if len(eventList) > maxEventTextLength:
+            log("breaking  event adding")
+            break
+
+    eventList = '\n\n' + eventList
     print("eventList Len:" + str(len(eventList)))
     eventList = "[color=#" + config['event_label_description']['color'] + "]" + eventList + "[/color]"
     return eventList
@@ -298,6 +319,7 @@ def prepareScreen():
 
 #The screen used to display the events and birthdays etc.
 class StartScreen(Screen):
+    updateGlobals()
     scrollAmount = -1
     #Kivy has two ways of changing properties in the kivy file, and I think these ....Properties work the best and are clear. Maybe for some cases another way would be better (using objects maybe)
     birthdayText = StringProperty()
@@ -472,8 +494,8 @@ class MainApp(App):
 def main():
     #Starting the gui
     Window.size = (1920, 1080)
+    updateGlobals()
     Window.fullscreen = True
-    
     MainApp().run()
     
 if __name__ == '__main__':
