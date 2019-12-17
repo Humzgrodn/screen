@@ -48,16 +48,16 @@ config = configparser.ConfigParser(interpolation=None)
 config.read('config.ini')
 
 #aan voor url van internet
-#page = urllib.request.urlopen('https://ussproton.nl/files/foto/ditiseenbeetjeeenrarebestandsnaammaarzoishetlastigerteraden.php?QWACaIbr5bBnexpBa0Mj=ijheVgsq7tWhtUW0UafE&rtJMWzYjtEj0meQpXoKx=Tmml2CShQPlJGB8jcwWq')
-#urlListStr = page.read().decode('utf-8')
+page = urllib.request.urlopen('https://ussproton.nl/files/foto/ditiseenbeetjeeenrarebestandsnaammaarzoishetlastigerteraden.php?QWACaIbr5bBnexpBa0Mj=ijheVgsq7tWhtUW0UafE&rtJMWzYjtEj0meQpXoKx=Tmml2CShQPlJGB8jcwWq')
+urlListStr = page.read().decode('utf-8')
 
 #print(urlListStr)
 
 urlList = configparser.ConfigParser(interpolation=None)
 
-
-urlList.read('url.ini')
-#urlList.read_string(urlListStr) #aan voor url van internet
+#only choose one of these 2
+#urlList.read('url.ini')
+urlList.read_string(urlListStr) #aan voor url van internet
 
 
 
@@ -82,7 +82,7 @@ def log(string):
     time = str(time.strftime("%m/%d.%H:%M:%S.%f"))[:-4]
     Logger.info("timestamp: " + time + str(string))
 
-#timelog function: usage: if you want to start a timer, give starStop = "start", this will log the startime, to end the timelog give the argument starStop = "stop"
+#timeLog function: if you want to start a timer, give starStop = "start", this will log the startime, to end the timelog give the argument starStop = "stop"
 # the id makes sure multiple timers can be run at the same time, and that 2 different strings can be logged for start/stop  of timer
 startStopDict = {}
 def timeLog(id, string, startStop = "start"):
@@ -90,7 +90,6 @@ def timeLog(id, string, startStop = "start"):
     if startStop == "start":
         startTime = datetime.datetime.now()
         if id not in startStopDict:
-            print("timelog activated start")
             startStopDict[id] = startTime
             Logger.info("starttime: " + str(startTime.strftime("%m/%d.%H:%M:%S")) +" " + str(string))
             return
@@ -102,7 +101,6 @@ def timeLog(id, string, startStop = "start"):
             return
 
     elif startStop == "stop":
-        print("timelog activated stop")
         stopTime = datetime.datetime.now()
         try:
             startTime = startStopDict[id]
@@ -122,6 +120,7 @@ def timeLog(id, string, startStop = "start"):
 #magic to determine how many photo's are in an album
 def getPhotoCount(album):
     keyList = urlList.options('photo_url')
+    print("album length" + str(keyList))
     try:
         currentAlbumPhotos = int(keyList[keyList.index(str(album + 1) + '-1') - 1][len(str(album) + '-'):])
     except ValueError:
@@ -230,9 +229,9 @@ def getEventList():
         
     eventList = '\n\n' + eventList    
     
-    #sloop alle kleur eraf
+    #sloop alle kleur eraf en check hoe lang de string mag zijn (2100 characters + colors)
     eventList = eventList.replace("[color=#" + config['event_label_description']['color'] + "]", "").replace("[/color]", "")
-    eventList = eventList[:2000]
+    eventList = eventList[:2100]
     print("eventList Len:" + str(len(eventList)))
     eventList = "[color=#" + config['event_label_description']['color'] + "]" + eventList + "[/color]"
     return eventList
@@ -267,7 +266,7 @@ def getService():
             pickle.dump(creds, token)
 
     return build('calendar', 'v3', credentials=creds)
-    service = build('calendar', 'v3', credentials=creds)
+    #service = build('calendar', 'v3', credentials=creds)
 
 #sets the next screen
 def nextScreen():
@@ -291,6 +290,7 @@ def prepareScreen():
     if nextScreenName  == 'photo_screen':
         global photoTime
         photoTime = 0
+        timeLog("load photo", "start album load" , "start")
         nextAlbum()
         print("next album loaded")
 
@@ -380,7 +380,7 @@ def nextAlbum():
         photoScreen.add_widget(AsyncImage(source=urlList['photo_url'][str(currentAlbum) + '-' + str(i + 1)][1:-1].replace(' ', '%20'), allow_stretch=True))
         #add the screen to the screenmanager
         pm.add_widget(photoScreen)
-
+    timeLog('load photo',"Photo album loaded" , "stop")
 #this is the code for changing photos in albums, I think something's wrong here and the code is still wip
 class PhotoScreen(Screen):
     global currentAlbum
