@@ -40,6 +40,9 @@ from kivy.uix.screenmanager import ScreenManager, Screen
 #from kivy.uix.label import Label
 from kivy.uix.floatlayout import FloatLayout
 
+urlPage = 'https://ussproton.nl/files/foto/ditiseenbeetjeeenrarebestandsnaammaarzoishetlastigerteraden.php?QWACaIbr5bBnexpBa0Mj=ijheVgsq7tWhtUW0UafE&rtJMWzYjtEj0meQpXoKx=Tmml2CShQPlJGB8jcwWq'
+
+
 # If modifying these scopes, delete the file token.pickle.
 SCOPES = ['https://www.googleapis.com/auth/calendar.readonly']
 
@@ -47,8 +50,7 @@ SCOPES = ['https://www.googleapis.com/auth/calendar.readonly']
 config = configparser.ConfigParser(interpolation=None)
 config.read('config.ini')
 
-#aan voor url van internet
-page = urllib.request.urlopen('https://ussproton.nl/files/foto/ditiseenbeetjeeenrarebestandsnaammaarzoishetlastigerteraden.php?QWACaIbr5bBnexpBa0Mj=ijheVgsq7tWhtUW0UafE&rtJMWzYjtEj0meQpXoKx=Tmml2CShQPlJGB8jcwWq')
+page = urllib.request.urlopen(urlPage)
 urlListStr = page.read().decode('utf-8')
 
 urlList = configparser.ConfigParser(interpolation=None)
@@ -65,6 +67,7 @@ screenTime = 0.0
 photoTime = 0.0
 currentAlbum = 0
 albumCount = 3
+photoCount = [0]*albumCount
 currentPoster = 0
 eventLabelHeight = 1000
 prepareTime = 1 # the time in seconds (I think)
@@ -116,35 +119,35 @@ def timeLog(id, string, startStop = "start"):
         Logger.warning("timedelta: no start/stop" + str(string))
 
 def updateGlobals():
-    global config
+    
+    global photoCount, albumCount, config, urlListStr, urlList, prepareTime, maxEventTextLength, photoUrlList
+
     # Get the config
     config = configparser.ConfigParser(interpolation=None)
     config.read('config.ini')
-    global urlListStr
-    global urlList
-    page = urllib.request.urlopen('https://ussproton.nl/files/foto/ditiseenbeetjeeenrarebestandsnaammaarzoishetlastigerteraden.php?QWACaIbr5bBnexpBa0Mj=ijheVgsq7tWhtUW0UafE&rtJMWzYjtEj0meQpXoKx=Tmml2CShQPlJGB8jcwWq')
+
+    page = urllib.request.urlopen(urlPage)
     urlListStr = page.read().decode('utf-8')
-    urlList = configparser.ConfigParser(interpolation=None)
     urlList.read_string(urlListStr) #aan voor url van internet
     log("updated globals")
     #global urlList
-    global prepareTime
     prepareTime = int(config['other']['prepare_time'])
-    global maxEventTextLength
     maxEventTextLength = int(config['start_screen']['max_scroll_text'])
-    global photoUrlList
     photoUrlList = urlList.options('photo_url')
+
+    for album in range(albumCount):
+        print(album)
+        keyList = photoUrlList
+        try:
+            currentAlbumPhotos = int(keyList[keyList.index(str(album + 1) + '-1') - 1][len(str(album) + '-'):])
+        except ValueError:
+            currentAlbumPhotos = int(keyList[len(keyList)-1][len(str(album) + '-'):])
+        photoCount[album] = currentAlbumPhotos
 
 #magic to determine how many photo's are in an album
 def getPhotoCount(album):
-    global photoUrlList
-    keyList = photoUrlList
-    try:
-        currentAlbumPhotos = int(keyList[keyList.index(str(album + 1) + '-1') - 1][len(str(album) + '-'):])
-    except ValueError:
-        currentAlbumPhotos = int(keyList[len(keyList)-1][len(str(album) + '-'):])
-        
-    return currentAlbumPhotos
+    return photoCount[album]
+
     
 #gets the amount of posters
 def getPosterCount():
@@ -306,13 +309,13 @@ def prepareScreen():
         sm.get_screen('start_screen').eventUpdate()
 
     if nextScreenName == 'poster_screen':
-        sm.get_screen('poster_screen').loadNewPoster()
+        sm.get_screen('poster_screen').loadNewPoster()  
 
     if nextScreenName  == 'photo_screen':
         global photoTime
         photoTime = 0
         timeLog("load photo", "start album load" , "start")
-        nextAlbum()
+        sm.get_screen('photo_screen').nextAlbum()
         print("next album loaded")
 
     prepared = True
@@ -377,32 +380,10 @@ class StartScreen(Screen):
 
 
 #removes the current photos from the photoscreenmanager and adds the new ones
-def nextAlbum():
-    global currentAlbum
-    
-    currentAlbum += 1
-    
-    if currentAlbum > 3: #maak een albumcount functie
-        currentAlbum = 1
-    
-    logging.info("Loading photo album " + str(currentAlbum))
-    #remove all screens/ photos from the manager, ugly but works
-    #print("Pre removal: " + str(pm.screen_names))
-    for removedScreen in pm.screen_names:
-        print("Screen to be removed: " + str(removedScreen))
-        pm.remove_widget(pm.get_screen(removedScreen))
-        print("After removal: " + str(pm.screen_names))
 
-    
-    #makes a new screen for each photo in the current photo album and adds this photo to the screen
-    for i in range(0, getPhotoCount(currentAlbum)):
-        #print('Adding a photoScreen called: photo_' + str(i + 1))
-        photoScreen = Screen(name='photo_' + str(i + 1))
-        #add the photo to the screen
-        photoScreen.add_widget(AsyncImage(source=urlList['photo_url'][str(currentAlbum) + '-' + str(i + 1)][1:-1].replace(' ', '%20'), allow_stretch=True))
-        #add the screen to the screenmanager
-        pm.add_widget(photoScreen)
-    timeLog('load photo',"Photo album loaded" , "stop")
+
+
+
 #this is the code for changing photos in albums, I think something's wrong here and the code is still wip
 class PhotoScreen(Screen):
     global currentAlbum
@@ -410,9 +391,58 @@ class PhotoScreen(Screen):
     dateText = markup(getDate(), 'photo_date_label')
     timeText = markup(getTime(), 'photo_time_label')
 
-    def frameUpdate(self, dt):
-        global photoTime, prepared
+    def nextAlbum(self):
         global currentAlbum
+        
+        currentAlbum += 1
+        
+        if currentAlbum > 2: #maak een albumcount functie
+            currentAlbum = 1
+        
+        logging.info("Loading photo album " + str(currentAlbum))
+        #remove all screens/ photos from the manager, ugly but works
+        #print("Pre removal: " + str(pm.screen_names))
+        for removedScreen in pm.screen_names:
+            print("Screen to be removed: " + str(removedScreen))
+            pm.remove_widget(pm.get_screen(removedScreen))
+            print("After removal: " + str(pm.screen_names))
+
+        
+        #Initialise the first 3 photos
+        for i in range(int(config['photo_screen']['buffer'])):
+            #print('Adding a photoScreen called: photo_' + str(i + 1))
+            photoScreen = Screen(name='photo_' + str(i + 1))
+            #add the photo to the screen
+            photoScreen.add_widget(AsyncImage(source=urlList['photo_url'][str(currentAlbum) + '-' + str(i + 1)][1:-1].replace(' ', '%20'), allow_stretch=True))
+            #add the screen to the screenmanager
+            pm.add_widget(photoScreen)
+        timeLog('load photo',"Photo album loaded" , "stop")
+
+    def nextPhoto(self):
+        print(str(pm.screen_names))
+        global currentAlbum
+
+        #first set the new photo
+        pm.current = pm.next()
+        currentPhoto = int(pm.current[6:])
+        log('Now displaying ' + pm.current)
+        #then remove the old one the if statement for when this function is accidentally called to early
+        #if currentPhoto != 1:
+        pm.remove_widget(pm.get_screen('photo_' + str(currentPhoto - 1)))
+        log('Photo_' + str(currentPhoto - 1) + " removed from buffer")
+
+        #then if the whole album isn't loaded:
+        if currentPhoto + int(config['photo_screen']['buffer']) - 2 < getPhotoCount(currentAlbum):
+            photoScreen = Screen(name='photo_' + str(currentPhoto + int(config['photo_screen']['buffer']) - 1))
+            #add the photo to the screen
+            photoScreen.add_widget(AsyncImage(source=urlList['photo_url'][str(currentAlbum) + '-' + str(currentPhoto + int(config['photo_screen']['buffer']) - 1)][1:-1].replace(' ', '%20'), allow_stretch=True))
+            #add the screen to the screenmanager
+            pm.add_widget(photoScreen)
+            log('Photo_' + str(currentPhoto + int(config['photo_screen']['buffer']) - 1) + ' added to buffer')
+
+
+    def frameUpdate(self, dt):
+        global photoTime, prepared, currentAlbum
         #print("Now displaying: " + str(currentAlbum) + ", " + str(pm.current))
         photoTime += dt
         #loading a new photo
@@ -421,18 +451,24 @@ class PhotoScreen(Screen):
 
         if int(config['photo_screen']['time_spend']) < photoTime:
             
-            #going to the poster screen and setting the new album
-            if pm.current == 'photo_' + str(getPhotoCount(currentAlbum)): #heeeeel inefficient
-
+            #If the last photo is shown go to next screen
+            if pm.current == 'photo_' + str(getPhotoCount(currentAlbum)):
+                photoTime = 0
                 nextScreen()
+                #pm.remove_widget(pm.current) #misschien nodig? niet vergeten iig
                 return
+
             photoTime = 0
             #going to the next photo
-            pm.current = pm.next()
+            self.nextPhoto()
+            
+
                         
         self.ids.date_label.text = markup(getDate(), 'photo_date_label')
         self.ids.time_label.text = markup(getTime(), 'photo_time_label')
         
+
+
 
 #this is the posterscreen
 class PosterScreen(Screen):
