@@ -40,7 +40,7 @@ from kivy.uix.screenmanager import ScreenManager, Screen
 #from kivy.uix.label import Label
 from kivy.uix.floatlayout import FloatLayout
 
-urlPage = 'https://ussproton.nl/files/foto/ditiseenbeetjeeenrarebestandsnaammaarzoishetlastigerteraden.php?QWACaIbr5bBnexpBa0Mj=ijheVgsq7tWhtUW0UafE&rtJMWzYjtEj0meQpXoKx=Tmml2CShQPlJGB8jcwWq'
+urlPage = 'https://ussproton.nl/files/foto/ditiseenbeetjeeenrarebestandsnaammaarzoishetlastigerteraden.php?QWACaIbr5bBnexpBa0Mj=ijheVgsq7tWhtUW0UafE&rtJMWzYjtEj0meQpXoKx=Tmml2CShQPlJGB8jcwWq&date=' + str(time.time()).replace(".", "")
 
 
 # If modifying these scopes, delete the file token.pickle.
@@ -120,12 +120,12 @@ def timeLog(id, string, startStop = "start"):
 
 def updateGlobals():
     
-    global photoCount, albumCount, config, urlListStr, urlList, prepareTime, maxEventTextLength, photoUrlList
+    global photoCount, albumCount, config, urlListStr, urlList, prepareTime, maxEventTextLength, photoUrlList, urlPage
 
     # Get the config
     config = configparser.ConfigParser(interpolation=None)
     config.read('config.ini')
-
+    urlPage = 'https://ussproton.nl/files/foto/ditiseenbeetjeeenrarebestandsnaammaarzoishetlastigerteraden.php?QWACaIbr5bBnexpBa0Mj=ijheVgsq7tWhtUW0UafE&rtJMWzYjtEj0meQpXoKx=Tmml2CShQPlJGB8jcwWq&date=' + str(time.time()).replace(".", "")
     page = urllib.request.urlopen(urlPage)
     urlListStr = page.read().decode('utf-8')
     urlList.read_string(urlListStr) #aan voor url van internet
@@ -159,7 +159,7 @@ def getDate():
     return datetime.datetime.now().isoformat()[0:10]
     
 #gets the time in isoformat, give seconds, minutes, or millis as an argument to change the detail
-def getTime(resolution="seconds"):
+def getTime(resolution="minutes"):
     if resolution == "seconds":
         return datetime.datetime.now().isoformat()[11:19]
     elif resolution == "minutes":
@@ -389,7 +389,7 @@ class PhotoScreen(Screen):
     global currentAlbum
     
     dateText = markup(getDate(), 'photo_date_label')
-    timeText = markup(getTime(), 'photo_time_label')
+    timeText = markup(getTime("minutes"), 'photo_time_label')
 
     def nextAlbum(self):
         global currentAlbum
@@ -465,7 +465,7 @@ class PhotoScreen(Screen):
 
                         
         self.ids.date_label.text = markup(getDate(), 'photo_date_label')
-        self.ids.time_label.text = markup(getTime(), 'photo_time_label')
+        self.ids.time_label.text = markup(getTime("minutes"), 'photo_time_label')
         
 
 
