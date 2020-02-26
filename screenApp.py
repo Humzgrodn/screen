@@ -414,11 +414,9 @@ class PhotoScreen(Screen):
         #first set the new photo
         pm.current = pm.next()
         currentPhoto = int(pm.current[6:])
-        log('Now displaying ' + pm.current)
         #then remove the old one the if statement for when this function is accidentally called to early
         #if currentPhoto != 1:
         pm.remove_widget(pm.get_screen('photo_' + str(currentPhoto - 1)))
-        log('Photo_' + str(currentPhoto - 1) + " removed from buffer")
 
         #then if the whole album isn't loaded:
         if currentPhoto + int(config['photo_screen']['buffer']) - 2 < getPhotoCount(currentAlbum):
@@ -427,7 +425,6 @@ class PhotoScreen(Screen):
             photoScreen.add_widget(AsyncImage(source=urlList['photo_url'][str(currentAlbum) + '-' + str(currentPhoto + int(config['photo_screen']['buffer']) - 1)][1:-1].replace(' ', '%20'), allow_stretch=True))
             #add the screen to the screenmanager
             pm.add_widget(photoScreen)
-            log('Photo_' + str(currentPhoto + int(config['photo_screen']['buffer']) - 1) + ' added to buffer')
 
 
     def frameUpdate(self, dt):
@@ -471,8 +468,7 @@ class PosterScreen(Screen):
         
         if currentPoster > getPosterCount():
             currentPoster = 1
-        
-        logging.info("Loading poster " + str(currentPoster))
+
         self.posterUrl = urlList['poster_url'][str(currentPoster)][1:-1].replace(' ', '%20')
         log('new poster loaded: ' + self.posterUrl)
         
