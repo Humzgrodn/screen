@@ -35,6 +35,8 @@ from kivy.uix.image import AsyncImage
 from kivy.uix.image import Image
 from kivy.logger import Logger
 from kivy.uix.screenmanager import ScreenManager, Screen
+from kivy.config import Config
+Config.set("graphics", "show_cursor", 0)
 
 #code needed to make the memory trace work
 debug = True
