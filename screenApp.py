@@ -36,7 +36,38 @@ from kivy.uix.image import Image
 from kivy.logger import Logger
 from kivy.uix.screenmanager import ScreenManager, Screen
 
+#code needed to make the memory trace work
+debug = True
+import linecache
+import os
+import tracemalloc
 
+def display_top(snapshot, key_type='lineno', limit=10):
+    snapshot = snapshot.filter_traces((
+        tracemalloc.Filter(False, "<frozen importlib._bootstrap>"),
+        tracemalloc.Filter(False, "<unknown>"),
+    ))
+    top_stats = snapshot.statistics(key_type)
+
+    print("Top %s lines" % limit)
+    for index, stat in enumerate(top_stats[:limit], 1):
+        frame = stat.traceback[0]
+        # replace "/path/to/module/file.py" with "module/file.py"
+        filename = os.sep.join(frame.filename.split(os.sep)[-2:])
+        print("#%s: %s:%s: %.1f KiB"
+              % (index, filename, frame.lineno, stat.size / 1024))
+        line = linecache.getline(frame.filename, frame.lineno).strip()
+        if line:
+            print('    %s' % line)
+
+    other = top_stats[limit:]
+    if other:
+        size = sum(stat.size for stat in other)
+        print("%s other: %.1f KiB" % (len(other), size / 1024))
+    total = sum(stat.size for stat in top_stats)
+    print("Total allocated size: %.1f KiB" % (total / 1024))
+if debug == True:
+    tracemalloc.start()
 
 #from kivy.uix.label import Label
 from kivy.uix.floatlayout import FloatLayout
@@ -120,7 +151,9 @@ def timeLog(id, string, startStop = "start"):
         Logger.warning("timedelta: no start/stop" + str(string))
 
 def updateGlobals():
-    
+    if debug == True:
+        snapshot = tracemalloc.take_snapshot()
+        display_top(snapshot)
     global photoCount, albumCount, config, urlListStr, urlList, prepareTime, maxEventTextLength, photoUrlList, urlPage
 
     # Get the config
@@ -302,6 +335,7 @@ def prepareScreen():
     logging.info("now preparing: " + str(nextScreenName))
     global prepared
     if nextScreenName == 'start_screen':
+        updateGlobals()
         sm.get_screen('start_screen').birthdayUpdate()
         sm.get_screen('start_screen').eventUpdate()
 
@@ -318,7 +352,6 @@ def prepareScreen():
 
 #The screen used to display the events and birthdays etc.
 class StartScreen(Screen):
-    updateGlobals()
     scrollAmount = -1
     #Kivy has two ways of changing properties in the kivy file, and I think these ....Properties work the best and are clear. Maybe for some cases another way would be better (using objects maybe)
     birthdayText = StringProperty()
