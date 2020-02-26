@@ -136,7 +136,6 @@ def updateGlobals():
     photoUrlList = urlList.options('photo_url')
 
     for album in range(albumCount):
-        print(album)
         keyList = photoUrlList
         try:
             currentAlbumPhotos = int(keyList[keyList.index(str(album + 1) + '-1') - 1][len(str(album) + '-'):])
@@ -156,7 +155,7 @@ def getPosterCount():
 
 #gets the date in isoformat
 def getDate():
-    return datetime.datetime.now().isoformat()[0:10]
+    return datetime.datetime.now().strftime("%d-%m-%Y")
     
 #gets the time in isoformat, give seconds, minutes, or millis as an argument to change the detail
 def getTime(resolution="minutes"):
@@ -231,15 +230,13 @@ def getEventList():
     
 
     if not events:
-        print('Geen evenementen gevonden')
+        log('Geen evenementen gevonden')
     for event in events:
         startDate = markup(event['start'].get('dateTime', event['start'].get('date'))[0:10], 'event_label_date') + '\n'
         eventTitle = markup(event['summary'], 'event_label_title') + '\n'
         try:
             eventDescription = markup(event['description'], 'event_label_description') + '\n'
-            print(eventDescription)
             eventDescription = eventDescription.replace("[color=#" + config['event_label_description']['color'] + "]", "").replace("[/color]", "")
-            print(eventDescription)
         except KeyError:
             #when no description is found set it as nothing
             eventDescription = ''
@@ -250,7 +247,6 @@ def getEventList():
             break
 
     eventList = '\n\n' + eventList
-    print("eventList Len:" + str(len(eventList)))
     eventList = "[color=#" + config['event_label_description']['color'] + "]" + eventList + "[/color]"
     return eventList
     
@@ -299,6 +295,7 @@ def prepareScreen():
     logging.info("now preparing: " + str(nextScreenName))
     global prepared
     if nextScreenName == 'start_screen':
+        updateGlobals()
         sm.get_screen('start_screen').birthdayUpdate()
         sm.get_screen('start_screen').eventUpdate()
 
@@ -316,7 +313,6 @@ def prepareScreen():
 
 #The screen used to display the events and birthdays etc.
 class StartScreen(Screen):
-    updateGlobals()
     #Kivy has two ways of changing properties in the kivy file, and I think these ....Properties work the best and are clear. Maybe for some cases another way would be better (using objects maybe)
     birthdayText = StringProperty()
     birthdayBackgroundColor = StringProperty()
@@ -330,7 +326,7 @@ class StartScreen(Screen):
     timeText = StringProperty()
     eventText = StringProperty()
     scroll = NumericProperty()
-    #printCalendarId()
+    #printCalendarId()              # call a function that prints the calendar id's for al of proton's calendars
     
     header = markup(config['header']['text'], 'header')
     backgroundUrl = config['url_files']['start_background']
@@ -351,7 +347,6 @@ class StartScreen(Screen):
     def setEventLabelHeight(self, h):
         global eventLabelHeight
         eventLabelHeight = h + 200 #200 pixels padding to read the last event description
-        print(eventLabelHeight)
         
     #updates every frame
     def frameUpdate(self, dt):
@@ -404,9 +399,7 @@ class PhotoScreen(Screen):
         #remove all screens/ photos from the manager, ugly but works
         #print("Pre removal: " + str(pm.screen_names))
         for removedScreen in pm.screen_names:
-            print("Screen to be removed: " + str(removedScreen))
             pm.remove_widget(pm.get_screen(removedScreen))
-            print("After removal: " + str(pm.screen_names))
 
         
         #Initialise the first 3 photos
@@ -420,7 +413,6 @@ class PhotoScreen(Screen):
         timeLog('load photo',"Photo album loaded" , "stop")
 
     def nextPhoto(self):
-        print(str(pm.screen_names))
         global currentAlbum
 
         #first set the new photo
