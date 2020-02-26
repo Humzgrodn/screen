@@ -136,7 +136,6 @@ def updateGlobals():
     photoUrlList = urlList.options('photo_url')
 
     for album in range(albumCount):
-        print(album)
         keyList = photoUrlList
         try:
             currentAlbumPhotos = int(keyList[keyList.index(str(album + 1) + '-1') - 1][len(str(album) + '-'):])
@@ -156,11 +155,8 @@ def getPosterCount():
 
 #gets the date in isoformat
 def getDate():
-    #getting the date
-    d = datetime.datetime.now().isoformat()[0:10]
-    #returning the correct (hollands!) time format
-    return d[8:10] + d[4:8] + d[0:4]
-    
+    return datetime.datetime.now().isoformat()[0:10]
+
 #gets the time in isoformat, give seconds, minutes, or millis as an argument to change the detail
 def getTime(resolution="minutes"):
     if resolution == "seconds":
@@ -169,23 +165,30 @@ def getTime(resolution="minutes"):
         return datetime.datetime.now().isoformat()[11:16]
     elif resolution == "millis":
         return datetime.datetime.now().isoformat()[11:22]
-    
+
+#this gets the amount the window should scroll each frameupdate
+def scroll(dt, scrollAmount):
+    if scrollAmount < 0:
+        scrollAmount = 1
+    else:
+        scrollAmount -= dt*int(config['start_screen']['speed'])/eventLabelHeight
+    return scrollAmount
 
 #markup the text with different properties from the config file. Kivy has better ways to handle this, but I didn't know about them when I wrote this code. This could be an improvement for later.
 def markup(string, labelId): #the label id should match the id in the config.ini file
 
     if config[labelId]['bold'] == 'yes':
         string = '[b]' + string + '[/b]'
-    
+
     if config[labelId]['italic'] == 'yes':
         string = '[i]' + string + '[/i]'
-    
+
     if config[labelId]['underlined'] == 'yes':
         string = '[u]' + string + '[/u]'
-        
+
     if config[labelId]['strikethrough'] == 'yes':
         string = '[s]' + string + '[/s]'
-    
+
     string = '[color=#' + config[labelId]['color'] + ']' + string + '[/color]'
     string = '[size=' + config[labelId]['size'] + ']' + string + '[/size]'
 
@@ -203,14 +206,14 @@ def getBirthdayList():
                                         timeMax=nowPlusHour,
                                         singleEvents=True,
                                         orderBy='startTime').execute()
-                                        
-                                        
-                                        
+
+
+
     birthdays = birthdayResults.get('items', [])
     birthdayList = "Vandaag jarig: \n"
     for birthday in birthdays:
         birthdayList = birthdayList + '- ' + birthday['summary'] + '\n'
-        
+
     return birthdayList
 
 #gets the event list from the google calendar
@@ -218,11 +221,11 @@ def getEventList():
     global maxEventTextLength
     eventSeparator = markup(config['event_label_separation']['string'], 'event_label_separation') + '\n'
     eventList = eventSeparator
-    
+
     # Call the Calendar API
     now = datetime.datetime.now().isoformat() + 'Z' # 'Z' indicates UTC time
     maxInterval = (datetime.datetime.now() + datetime.timedelta(weeks=int(config['start_screen']['maximum_time']))).isoformat() + 'Z'
-    
+
     #HIER WORDEN DE EVENEMENTEN OPGEHAALD
     eventResults = getService().events().list(calendarId='bestuurproton@gmail.com', #hetzelfde als verjaardag maar dan met evenementen
                                         timeMin=now,
@@ -231,40 +234,36 @@ def getEventList():
                                         singleEvents=True,
                                         orderBy='startTime').execute()
     events = eventResults.get('items', [])
-    
+
 
     if not events:
-        print('Geen evenementen gevonden')
+        log('Geen evenementen gevonden')
     for event in events:
         startDate = markup(event['start'].get('dateTime', event['start'].get('date'))[0:10], 'event_label_date') + '\n'
         eventTitle = markup(event['summary'], 'event_label_title') + '\n'
         try:
             eventDescription = markup(event['description'], 'event_label_description') + '\n'
-            print(eventDescription)
             eventDescription = eventDescription.replace("[color=#" + config['event_label_description']['color'] + "]", "").replace("[/color]", "")
-            print(eventDescription)
         except KeyError:
-            #when no description is found set it as nothing
-            eventDescription = ''
-        
+            eventDescription = markup('Geen omschrijving', 'event_label_description') + '\n'
+
         eventList = eventList + startDate + eventTitle + eventDescription + eventSeparator
         if len(eventList) > maxEventTextLength:
             log("breaking  event adding")
             break
 
     eventList = '\n\n' + eventList
-    print("eventList Len:" + str(len(eventList)))
     eventList = "[color=#" + config['event_label_description']['color'] + "]" + eventList + "[/color]"
     return eventList
-    
+
 #Gets the calendar id's, can be handy for determining the id's. This is not actively used but needed to configure the screen
 def printCalendarId():
-    print('Getting the calendars connected to this account') 
+    log('Getting the calendars connected to this account')
     calendar_list = getService().calendarList().list().execute()
 
     for calendar in calendar_list['items']:
-        print(calendar['summary'], calendar['id'])
-    
+        log(calendar['summary'], calendar['id'])
+
 #connects with the google api
 def getService():
     creds = None
@@ -306,20 +305,20 @@ def prepareScreen():
         sm.get_screen('start_screen').eventUpdate()
 
     if nextScreenName == 'poster_screen':
-        sm.get_screen('poster_screen').loadNewPoster()  
+        sm.get_screen('poster_screen').loadNewPoster()
 
     if nextScreenName  == 'photo_screen':
         global photoTime
         photoTime = 0
         timeLog("load photo", "start album load" , "start")
         sm.get_screen('photo_screen').nextAlbum()
-        print("next album loaded")
 
     prepared = True
 
 #The screen used to display the events and birthdays etc.
 class StartScreen(Screen):
     updateGlobals()
+    scrollAmount = -1
     #Kivy has two ways of changing properties in the kivy file, and I think these ....Properties work the best and are clear. Maybe for some cases another way would be better (using objects maybe)
     birthdayText = StringProperty()
     birthdayBackgroundColor = StringProperty()
@@ -327,35 +326,26 @@ class StartScreen(Screen):
     backgroundUrl = StringProperty()
     birthdayUrl = StringProperty()
     header = StringProperty()
-    
+
 
     dateText = StringProperty()
     timeText = StringProperty()
     eventText = StringProperty()
     scroll = NumericProperty()
+    contentLabelHeight = NumericProperty()
     #printCalendarId()
-    
+
     header = markup(config['header']['text'], 'header')
     backgroundUrl = config['url_files']['start_background']
     birthdayUrl = config['url_files']['birthday_background']
     birthdayBackgroundColor = '#' + config['background_color']['birthday_color']
     eventBackgroundColor = '#' + config['background_color']['event_color']
-    
-    #this does the scrolling of the scrolltext each frameupdate
-    def doScroll(self, dt):
-        scrollAmount = dt*int(config['start_screen']['speed'])/eventLabelHeight
-        if self.scroll - scrollAmount <= 0:
-            self.scroll = 1
-        else:
-            self.scroll -= scrollAmount
-
 
     #sets the total height of the label displaying the text
     def setEventLabelHeight(self, h):
         global eventLabelHeight
         eventLabelHeight = h + 200 #200 pixels padding to read the last event description
-        print(eventLabelHeight)
-        
+
     #updates every frame
     def frameUpdate(self, dt):
         global prepared
@@ -363,13 +353,13 @@ class StartScreen(Screen):
         #when it's time, change to the next screen
         if float(config['start_screen']['time_spend']) < (screenTime + prepareTime + 4) and not prepared:
             prepareScreen()
-            print("prepare for photo's")
+            log("prepare for photo's")
         if float(config['start_screen']['time_spend']) < screenTime:
             nextScreen()
             return
-        
-        #sets the new scroll value
-        self.doScroll(dt)
+
+        self.scroll = scroll(dt, self.scrollAmount)
+        self.scrollAmount = self.scroll
         self.dateText = markup(getDate(), 'start_date_label')
         self.timeText = markup(getTime(), 'start_time_label')
         
@@ -405,16 +395,12 @@ class PhotoScreen(Screen):
         
         logging.info("Loading photo album " + str(currentAlbum))
         #remove all screens/ photos from the manager, ugly but works
-        #print("Pre removal: " + str(pm.screen_names))
         for removedScreen in pm.screen_names:
-            print("Screen to be removed: " + str(removedScreen))
             pm.remove_widget(pm.get_screen(removedScreen))
-            print("After removal: " + str(pm.screen_names))
 
         
         #Initialise the first 3 photos
         for i in range(int(config['photo_screen']['buffer'])):
-            #print('Adding a photoScreen called: photo_' + str(i + 1))
             photoScreen = Screen(name='photo_' + str(i + 1))
             #add the photo to the screen
             photoScreen.add_widget(AsyncImage(source=urlList['photo_url'][str(currentAlbum) + '-' + str(i + 1)][1:-1].replace(' ', '%20'), allow_stretch=True))
@@ -423,7 +409,6 @@ class PhotoScreen(Screen):
         timeLog('load photo',"Photo album loaded" , "stop")
 
     def nextPhoto(self):
-        print(str(pm.screen_names))
         global currentAlbum
 
         #first set the new photo
@@ -447,7 +432,6 @@ class PhotoScreen(Screen):
 
     def frameUpdate(self, dt):
         global photoTime, prepared, currentAlbum
-        #print("Now displaying: " + str(currentAlbum) + ", " + str(pm.current))
         photoTime += dt
         #loading a new photo
         if pm.current == 'photo_' + str(getPhotoCount(currentAlbum)) and not prepared:
@@ -490,7 +474,7 @@ class PosterScreen(Screen):
         
         logging.info("Loading poster " + str(currentPoster))
         self.posterUrl = urlList['poster_url'][str(currentPoster)][1:-1].replace(' ', '%20')
-        print('new poster loaded: ' + self.posterUrl)
+        log('new poster loaded: ' + self.posterUrl)
         
     def frameUpdate(self, dt):
         global screenTime, currentPoster, prepared
