@@ -167,13 +167,6 @@ def getTime(resolution="minutes"):
     elif resolution == "millis":
         return datetime.datetime.now().isoformat()[11:22]
     
-#this gets the amount the window should scroll each frameupdate
-def scroll(dt, scrollAmount):
-    if scrollAmount < 0:
-        scrollAmount = 1
-    else:
-        scrollAmount -= dt*int(config['start_screen']['speed'])/eventLabelHeight
-    return scrollAmount
 
 #markup the text with different properties from the config file. Kivy has better ways to handle this, but I didn't know about them when I wrote this code. This could be an improvement for later.
 def markup(string, labelId): #the label id should match the id in the config.ini file
@@ -323,7 +316,6 @@ def prepareScreen():
 #The screen used to display the events and birthdays etc.
 class StartScreen(Screen):
     updateGlobals()
-    scrollAmount = -1
     #Kivy has two ways of changing properties in the kivy file, and I think these ....Properties work the best and are clear. Maybe for some cases another way would be better (using objects maybe)
     birthdayText = StringProperty()
     birthdayBackgroundColor = StringProperty()
@@ -337,7 +329,6 @@ class StartScreen(Screen):
     timeText = StringProperty()
     eventText = StringProperty()
     scroll = NumericProperty()
-    contentLabelHeight = NumericProperty()
     #printCalendarId()
     
     header = markup(config['header']['text'], 'header')
@@ -345,6 +336,15 @@ class StartScreen(Screen):
     birthdayUrl = config['url_files']['birthday_background']
     birthdayBackgroundColor = '#' + config['background_color']['birthday_color']
     eventBackgroundColor = '#' + config['background_color']['event_color']
+    
+    #this does the scrolling of the scrolltext each frameupdate
+    def doScroll(self, dt):
+        scrollAmount = dt*int(config['start_screen']['speed'])/eventLabelHeight
+        if self.scroll - scrollAmount <= 0:
+            self.scroll = 1
+        else:
+            self.scroll -= scrollAmount
+
 
     #sets the total height of the label displaying the text
     def setEventLabelHeight(self, h):
@@ -363,9 +363,9 @@ class StartScreen(Screen):
         if float(config['start_screen']['time_spend']) < screenTime:
             nextScreen()
             return
-            
-        self.scroll = scroll(dt, self.scrollAmount)
-        self.scrollAmount = self.scroll
+        
+        #sets the new scroll value
+        self.doScroll(dt)
         self.dateText = markup(getDate(), 'start_date_label')
         self.timeText = markup(getTime(), 'start_time_label')
         
