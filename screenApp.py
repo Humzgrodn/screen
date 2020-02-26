@@ -241,7 +241,8 @@ def getEventList():
             eventDescription = eventDescription.replace("[color=#" + config['event_label_description']['color'] + "]", "").replace("[/color]", "")
             print(eventDescription)
         except KeyError:
-            eventDescription = markup('Geen omschrijving', 'event_label_description') + '\n'
+            #when no description is found set it as nothing
+            eventDescription = ''
         
         eventList = eventList + startDate + eventTitle + eventDescription + eventSeparator
         if len(eventList) > maxEventTextLength:
