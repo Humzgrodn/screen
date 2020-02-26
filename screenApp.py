@@ -394,8 +394,8 @@ class StartScreen(Screen):
 
         self.scroll = scroll(dt, self.scrollAmount)
         self.scrollAmount = self.scroll
-        self.dateText = markup(getDate(), 'start_date_label')
-        self.timeText = markup(getTime(), 'start_time_label')
+        self.dateText = getDate()
+        self.timeText = getTime()
         
     def eventUpdate(self):
         self.scrollAmount = 1
@@ -483,8 +483,8 @@ class PhotoScreen(Screen):
             
 
                         
-        self.ids.date_label.text = markup(getDate(), 'photo_date_label')
-        self.ids.time_label.text = markup(getTime("minutes"), 'photo_time_label')
+        self.ids.date_label.text = getDate()
+        self.ids.time_label.text = getTime("minutes")
         
 
 
