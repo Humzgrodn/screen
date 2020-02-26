@@ -28,10 +28,11 @@
         #label for the date
         Label:
             id: date_label
-            markup: True
+            markup: False
             halign: 'center'
             valign: 'center'
             text: root.dateText
+            font_size: 40
             size_hint: None, None
             size: self.parent.size
             pos: 0, -35
@@ -39,10 +40,11 @@
         #label for the time
         Label:
             id: time_label
-            markup: True
+            markup: False
             halign: 'center'
             valign: 'center'
             text: root.timeText
+            font_size: 95
             size_hint: None, None
             size: self.parent.size
             pos: 0, 35
@@ -132,7 +134,10 @@
                 #label for the date
                 Label:
                     id: date_label
-                    markup: True
+                    color: 0 , 0.282 , 0.471, 1
+                    halign: 'center'
+                    font_size: 40
+                    valign: 'center'
                     halign: 'center'
                     valign: 'center'
                     text: root.dateText
@@ -143,8 +148,9 @@
                 #label for the time
                 Label:
                     id: time_label
-                    markup: True
+                    color: 0 , 0.282 , 0.471, 1
                     halign: 'center'
+                    font_size: 95
                     valign: 'center'
                     text: root.timeText
                     size_hint: None, None
