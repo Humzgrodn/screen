@@ -156,7 +156,10 @@ def getPosterCount():
 
 #gets the date in isoformat
 def getDate():
-    return datetime.datetime.now().isoformat()[0:10]
+    #getting the date
+    d = datetime.datetime.now().isoformat()[0:10]
+    #returning the correct (hollands!) time format
+    return d[8:10] + d[4:8] + d[0:4]
     
 #gets the time in isoformat, give seconds, minutes, or millis as an argument to change the detail
 def getTime(resolution="minutes"):
