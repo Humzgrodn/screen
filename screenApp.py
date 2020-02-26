@@ -12,9 +12,10 @@ import time
 import math
 import urllib.request
 
-
-#import os
-#os.environ['KIVY_IMAGE'] = 'sdl2'
+#Setting variables
+import os
+os.environ['KIVY_GL_BACKEND'] = 'gl'
+os.environ['KIVY_GRAPHICS'] = 'gles'
 
 
 from googleapiclient.discovery import build
