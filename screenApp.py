@@ -78,11 +78,11 @@ SCOPES = ['https://www.googleapis.com/auth/calendar.readonly']
 
 # Get the config
 config = configparser.ConfigParser(interpolation=None)
-fileDir = os.path.dirname(os.path.relpath(__file__)) + "/"
-if str(fileDir) == "":
-    config.read('config.ini')
-else:
-    config.read(str(fileDir) + 'config.ini')
+fileDir = os.path.dirname(os.path.relpath(__file__))
+if fileDir != "":
+    fileDir = fileDir + "/"
+    print(fileDir)
+config.read(fileDir + "config.ini")
 
 page = urllib.request.urlopen(urlPage)
 urlListStr = page.read().decode('utf-8')
@@ -160,11 +160,11 @@ def updateGlobals():
 
     # Get the config
     config = configparser.ConfigParser(interpolation=None)
-    fileDir = os.path.dirname(os.path.relpath(__file__)) + "/"
-    if str(fileDir) == "":
-        config.read('config.ini')
-    else:
-        config.read(str(fileDir) + 'config.ini')
+    fileDir = os.path.dirname(os.path.relpath(__file__))
+    if fileDir != "":
+        print(fileDir)
+        fileDir = fileDir + "/"
+    config.read(fileDir + 'config.ini')
     urlPage = 'https://ussproton.nl/files/foto/ditiseenbeetjeeenrarebestandsnaammaarzoishetlastigerteraden.php?QWACaIbr5bBnexpBa0Mj=ijheVgsq7tWhtUW0UafE&rtJMWzYjtEj0meQpXoKx=Tmml2CShQPlJGB8jcwWq&date=' + str(time.time()).replace(".", "")
     page = urllib.request.urlopen(urlPage)
     urlListStr = page.read().decode('utf-8')
@@ -310,7 +310,7 @@ def getService():
     # The file token.pickle stores the user's access and refresh tokens, and is
     # created automatically when the authorization flow completes for the first
     # time.
-    fileDir = os.path.dirname(os.path.relpath(__file__)) + "/"
+    fileDir = os.path.dirname(os.path.relpath(__file__))
     if str(fileDir) != "":
         fileDir = fileDir + "/"
     if os.path.exists(fileDir + 'token.pickle'):
