@@ -41,7 +41,6 @@ Config.set("graphics", "show_cursor", 0)
 #code needed to make the memory trace work
 debug = True
 import linecache
-import os
 import tracemalloc
 
 def display_top(snapshot, key_type='lineno', limit=10):
@@ -71,18 +70,19 @@ def display_top(snapshot, key_type='lineno', limit=10):
 if debug == True:
     tracemalloc.start()
 
-#from kivy.uix.label import Label
-from kivy.uix.floatlayout import FloatLayout
-
 urlPage = 'https://ussproton.nl/files/foto/ditiseenbeetjeeenrarebestandsnaammaarzoishetlastigerteraden.php?QWACaIbr5bBnexpBa0Mj=ijheVgsq7tWhtUW0UafE&rtJMWzYjtEj0meQpXoKx=Tmml2CShQPlJGB8jcwWq&date=' + str(time.time()).replace(".", "")
 
 
 # If modifying these scopes, delete the file token.pickle.
 SCOPES = ['https://www.googleapis.com/auth/calendar.readonly']
 
-# Get the config    
+# Get the config
 config = configparser.ConfigParser(interpolation=None)
-config.read('config.ini')
+fileDir = os.path.dirname(os.path.relpath(__file__)) + "/"
+if str(fileDir) == "":
+    config.read('config.ini')
+else:
+    config.read(str(fileDir) + 'config.ini')
 
 page = urllib.request.urlopen(urlPage)
 urlListStr = page.read().decode('utf-8')
@@ -160,7 +160,11 @@ def updateGlobals():
 
     # Get the config
     config = configparser.ConfigParser(interpolation=None)
-    config.read('config.ini')
+    fileDir = os.path.dirname(os.path.relpath(__file__)) + "/"
+    if str(fileDir) == "":
+        config.read('config.ini')
+    else:
+        config.read(str(fileDir) + 'config.ini')
     urlPage = 'https://ussproton.nl/files/foto/ditiseenbeetjeeenrarebestandsnaammaarzoishetlastigerteraden.php?QWACaIbr5bBnexpBa0Mj=ijheVgsq7tWhtUW0UafE&rtJMWzYjtEj0meQpXoKx=Tmml2CShQPlJGB8jcwWq&date=' + str(time.time()).replace(".", "")
     page = urllib.request.urlopen(urlPage)
     urlListStr = page.read().decode('utf-8')
@@ -306,8 +310,11 @@ def getService():
     # The file token.pickle stores the user's access and refresh tokens, and is
     # created automatically when the authorization flow completes for the first
     # time.
-    if os.path.exists('token.pickle'):
-        with open('token.pickle', 'rb') as token:
+    fileDir = os.path.dirname(os.path.relpath(__file__)) + "/"
+    if str(fileDir) != "":
+        fileDir = fileDir + "/"
+    if os.path.exists(fileDir + 'token.pickle'):
+        with open(fileDir + 'token.pickle', 'rb') as token:
             creds = pickle.load(token)
     # If there are no (valid) credentials available, let the user log in.
     if not creds or not creds.valid:
@@ -318,7 +325,7 @@ def getService():
                 'credentials.json', SCOPES)
             creds = flow.run_local_server()
         # Save the credentials for the next run
-        with open('token.pickle', 'wb') as token:
+        with open(fileDir + 'token.pickle', 'wb') as token:
             pickle.dump(creds, token)
 
     return build('calendar', 'v3', credentials=creds)
