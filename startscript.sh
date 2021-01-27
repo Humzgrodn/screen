@@ -16,7 +16,10 @@ function log {
 }
 
 #logsetup
-log "Executed start screen command"
+log "Executing start screen command"
 sleep 2
 export DISPLAY=:0
-python3 /home/pi/screen-master/screenApp.py
+python3 /home/pi/screen-master/screenApp.py & 
+log "start script done" 
+#the & is important for letting the startscript close.
+#the automatic shutdown problem at 15:05 has not yet been tested with this solution

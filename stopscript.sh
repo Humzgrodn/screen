@@ -11,4 +11,5 @@ function log {
 #logsetup
 log "Executed stop screen command"
 export DISPLAY=:0
-pkill -2 python3
+pkill -15 python3
+# -2 is ctr-C, but this seems to close without tracebacks (but softly)

@@ -1,7 +1,7 @@
 Prioriteit
 - Werkend krijgen van de wisselende schermen op de juiste volgorde
 - Een status object toevoegen om geen/ minder globals te gebruiken
-- Zomer/ wintertijd
+- Zomer/ wintertijd (volgens mij dealt t systeem hier mee maar moet nog getest worden)
 - Code beter geordend maken
 	- setEventLabelHeight???
 	- Global scrollamount?
@@ -13,11 +13,15 @@ Prioriteit
 	- Kleuren
 - Documentatie schrijven
 - Overzetten naar de PI
-	- Kivy op PI (problemen met hw acceleration/drivers)
+	- Kivy op PI (werkend, mogelijk kan optimalisatie nog wel helpen)
 	- Google api op PI? (werkend)
-- Log maken
-- Lengte scroll window???
 - handling of no internet connection
+
+- vragen nav werksessie 27-01-2021:
+	- checken of #pm.remove_widget(pm.current) op 486 in frameupdate uncomment moet worden
+	- of het & teken werkt om de crashes om 15.05 te stoppen
+	- checken of hij, als we t script om 9 starten, dat ie dan later crashed
+	- checken of het scherm op zwart blijft na een nacht
 
 Extra features:
 - Filmpjes
