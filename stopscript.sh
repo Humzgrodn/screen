@@ -12,4 +12,4 @@ function log {
 log "Executed stop screen command"
 export DISPLAY=:0
 pkill -15 python3
-# -2 is ctr-C, but this seems to close without tracebacks (but softly)
+# -15 is the terminate command (TERM), and is used to exit all instances of python3 gracefully
