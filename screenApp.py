@@ -238,8 +238,8 @@ def markup(string, labelId): #the label id should match the id in the config.ini
 def getBirthdayList():
     birthdayList = ''
     # Call the Calendar API
-    now = (datetime.now() + 'Z' # 'Z' indicates UTC time why the -1
-    nowPlusHour = (datetime.now() + datetime.timedelta(hours=1)).isoformat() + 'Z'
+    now = (datetime.datetime.now() + datetime.timedelta(days=-1)).isoformat() 'Z' # 'Z' indicates UTC time why the -1 NIEUWE:´now = (datetime.now() + 'Z' # 'Z' indicates UTC time why the -1´
+    nowPlusHour = (datetime.datetime.now() + datetime.timedelta(hours=1)).isoformat() + 'Z' #NIEUWE LINE: nowPlusHour = (datetime.now() + datetime.timedelta(hours=1)).isoformat() + 'Z'
     #HIER WORDEN DE VERJAARDAGEN OPGEHAALD
     birthdayResults = getService().events().list(calendarId='cus9h91mlj8ck2t07n8q69hgeg@group.calendar.google.com', #'primary' is alle, hier moet de verjaardagscalender id staan.
                                         timeMin=now,
